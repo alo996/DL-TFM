@@ -14,8 +14,8 @@ from matplotlib import pyplot
 import sklearn
 from sklearn.model_selection import train_test_split
 
-np.random.seed(0)
-tf.compat.v1.set_random_seed(0)
+np.random.seed(1)
+tf.compat.v1.set_random_seed(1)
 
 # create input and target datasets
 def create_datasets(size, input_data_filepath, target_date_filepath):
