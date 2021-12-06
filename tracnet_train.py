@@ -14,6 +14,7 @@ from matplotlib import pyplot
 import sklearn
 from sklearn.model_selection import train_test_split
 
+# set seed for reproducability
 np.random.seed(1)
 tf.compat.v1.set_random_seed(1)
 
@@ -36,7 +37,7 @@ def create_datasets(size, input_data_filepath, target_date_filepath):
 
     return dspl_array, trac_array
 
-
+# step-wise decay
 def lr_step_decay(epoch):
     initial_lr = 6e-4
     drop_rate = 0.7943
@@ -72,7 +73,6 @@ def train_tracnet(X_train, y_train, input_shape=(104, 104, 2), epochs=5):
         include_optimizer=True
     )
     pyplot.close()
-
 
 
 X_train, y_train = create_datasets(104, '/home/r/richard/Desktop/trainData104/dspl',
