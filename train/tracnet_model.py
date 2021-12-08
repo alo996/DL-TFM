@@ -1,8 +1,7 @@
-import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.initializers import RandomNormal
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Concatenate, BatchNormalization, \
-    Activation, Concatenate
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, BatchNormalization, Activation, \
+    Concatenate
 
 
 def conv_block(input, num_filters, snd_batch_normalization=True):
@@ -43,9 +42,9 @@ def decoder_block(input, skip_features, num_filters):
     return x
 
 
-def build_tracnet(input_shape):
+def build_tracnet(input_shape, batch_size):
     # entry point into graph of layers
-    inputs = Input(shape=input_shape, batch_size=32)
+    inputs = Input(shape=input_shape, batch_size=batch_size)
     print(inputs.shape)
 
     # convolution and max-pooling operations with specified numbers of filters
@@ -64,7 +63,7 @@ def build_tracnet(input_shape):
     # output
     initializer = RandomNormal(mean=0.0, stddev=0.01)
     outputs = Conv2D(filters=2, kernel_size=(3, 3), padding='same', kernel_initializer=initializer,
-               bias_initializer='zeros')(d3)
+                     bias_initializer='zeros')(d3)
 
     # build model
     model = Model(inputs, outputs, name='Tracnet')
