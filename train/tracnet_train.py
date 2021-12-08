@@ -9,6 +9,7 @@ from tracnet_model import build_tracnet
 import os
 from matplotlib import pyplot as plt
 
+
 # set seed for reproducability
 np.random.seed(1)
 tf.compat.v1.set_random_seed(1)
@@ -16,6 +17,7 @@ tf.compat.v1.set_random_seed(1)
 
 # create input and target datasets
 def create_datasets(size, input_data_filepath, target_data_filepath):
+    number_samples = os.path.getsize
     dspl_array = np.empty([1472, size, size, 2], dtype='float64')
     for i, filename in enumerate(os.listdir(input_data_filepath)):
         f = os.path.join(input_data_filepath, filename)
@@ -42,22 +44,20 @@ def lr_step_decay(epoch):
 
 
 # build and train a tracnet from scratch
-def train_tracnet(X_train, y_train, input_shape=(104, 104, 2), epochs=5):
-    mag = input_shape[0] / 104
-    batch_size = np.ceil(30 / mag)
+def train_tracnet(dspl_train, trc_train, dspl_test, trc_test, input_shape=(104, 104, 2), epochs=23):
+    batch_size = 32
     model = build_tracnet(input_shape, batch_size)
     model.compile(
         optimizer=SGD(momentum=0.9),
         loss=MeanSquaredError(),
-        metrics=[Accuracy(), RootMeanSquaredError(), MeanAbsoluteError(), MeanIoU()]
+        metrics=[Accuracy(), RootMeanSquaredError(), MeanAbsoluteError()]
     )
     model.summary()
     history = model.fit(
-        X_train,
-        y_train,
-        validation_split=0.1,
+        dspl_train,
+        trc_train,
+        validation_data=(dspl_test, trc_test),
         batch_size=batch_size,
-        shuffle=True,
         epochs=epochs,
         callbacks=[LearningRateScheduler(lr_step_decay, verbose=2)],
         verbose=2
@@ -69,7 +69,8 @@ def train_tracnet(X_train, y_train, input_shape=(104, 104, 2), epochs=5):
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper left')
-    plt.savefig('accuracy.png')
+    plt.savefig('accuracy_1.png')
+    plt.close()
 
     # plot loss
     plt.plot(history.history['loss'])
@@ -78,7 +79,8 @@ def train_tracnet(X_train, y_train, input_shape=(104, 104, 2), epochs=5):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper left')
-    plt.savefig('loss.png')
+    plt.savefig('loss_1.png')
+    plt.close()
 
     # plot rmse
     plt.plot(history.history['root_mean_squared_error'])
@@ -87,25 +89,19 @@ def train_tracnet(X_train, y_train, input_shape=(104, 104, 2), epochs=5):
     plt.ylabel('rmse')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper left')
-    plt.savefig('rmse.png')
-
-    # plot meanIoU
-    plt.plot(history.history['mean_iou'])
-    plt.plot(history.history['val_mean_iou'])
-    plt.title('model mean_iou')
-    plt.ylabel('mean_iou')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'val'], loc='upper left')
-    plt.savefig('mean_iou.png')
+    plt.savefig('rmse_1.png')
+    plt.close()
 
     # save model
     model.save(
-        "'model.tf'",
+        "'model_1.tf'",
         save_format='tf',
         include_optimizer=True
     )
 
 
-X_train, y_train = create_datasets(104, '/home/r/richard/Desktop/trainData104/dspl',
-                '/home/r/richard/Desktop/trainData104/trac')
-train_tracnet(X_train, y_train)
+dspl_train, trc_train = create_datasets(104, '/home/r/richard/Desktop/trainData104/dspl',
+                                        '/home/r/richard/Desktop/trainData104/trac')
+dspl_test, trc_test = create_datasets(104, '/home/r/richard/Desktop/test/generic/testData104/dspl',
+                                      '/home/r/richard/Desktop/test/generic/testData104/trac')
+train_tracnet(dspl_train, trc_train, dspl_test, trc_test)
