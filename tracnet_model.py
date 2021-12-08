@@ -43,9 +43,9 @@ def decoder_block(input, skip_features, num_filters):
     return x
 
 
-def build_tracnet(input_shape):
+def build_tracnet(input_shape, batch_size):
     # entry point into graph of layers
-    inputs = Input(shape=input_shape, batch_size=32)
+    inputs = Input(shape=input_shape, batch_size=batch_size)
     print(inputs.shape)
 
     # convolution and max-pooling operations with specified numbers of filters
