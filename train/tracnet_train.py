@@ -3,9 +3,9 @@ from scipy.io import loadmat
 import tensorflow as tf
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.losses import MeanSquaredError
-from tensorflow.keras.metrics import Accuracy, RootMeanSquaredError, MeanAbsoluteError, MeanIoU
+from tensorflow.keras.metrics import Accuracy, RootMeanSquaredError, MeanAbsoluteError
 from tensorflow.keras.callbacks import LearningRateScheduler
-from tracnet_model import build_tracnet
+from train.tracnet_model import build_tracnet
 import os
 from matplotlib import pyplot as plt
 
