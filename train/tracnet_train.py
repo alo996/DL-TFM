@@ -17,7 +17,7 @@ tf.compat.v1.set_random_seed(1)
 
 # create input and target datasets
 def create_datasets(size, input_data_filepath, target_data_filepath):
-    number_samples = os.path.getsize
+    # number_samples = os.path.getsize
     dspl_array = np.empty([1472, size, size, 2], dtype='float64')
     for i, filename in enumerate(os.listdir(input_data_filepath)):
         f = os.path.join(input_data_filepath, filename)
