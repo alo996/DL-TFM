@@ -5,6 +5,7 @@ from scipy.io import loadmat
 from add_noise import addNoise
 from errorTrac import errorTrac
 
+
 def calcError(path):
     errors = []
     S = 160

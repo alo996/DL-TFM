@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 
 
-def errorTrac(filepath, filepath_GT):
+def errorTrac(filepath, filepath_GT, plot=False):
+    """Calculate error of traction stress field relative to ground truth as normalized rmse, for cell interior only."""
     file = loadmat(filepath)  # load prediction
     file_GT = loadmat(filepath_GT) # load ground truth
     brdx = file['brdx']  # x-values of predicted cell border
@@ -16,7 +17,7 @@ def errorTrac(filepath, filepath_GT):
     zipped = np.array(list(zip(brdx[0], brdy[0])))  # array with (x,y) pairs of cell border coordinates
     polygon = sh.geometry.Polygon(zipped)  # create polygon
 
-    interior = np.zeros((file['dspl'].shape[0], file['dspl'].shape[1]), dtype=int)  # create all zero matrix of desired shape
+    interior = np.zeros((file['dspl'].shape[0], file['dspl'].shape[1]), dtype=int)  # create all zero matrix
     for i in range(len(interior)):  # set all elements in interior matrix to 1 that actually lie within the cell
         for j in range(len(interior[i])):
             point = Point(i, j)
@@ -24,9 +25,10 @@ def errorTrac(filepath, filepath_GT):
                 interior[i][j] = 1
 
     # plot polygons using geopandas
-    p = gpd.GeoSeries(polygon)
-    p.plot()
-    plt.show()
+    if plot:
+        p = gpd.GeoSeries(polygon)
+        p.plot()
+        plt.show()
 
     # update prediction and ground truth by discarding areas outside of cell borders
     trac[:, :, 1] = trac[:, :, 1] * interior
