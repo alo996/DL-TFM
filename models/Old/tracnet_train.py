@@ -5,7 +5,7 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.metrics import Accuracy, RootMeanSquaredError, MeanAbsoluteError
 from tensorflow.keras.callbacks import LearningRateScheduler
-from train.tracnet_model import build_tracnet
+from models.Old.tracnet_model import build_tracnet
 import os
 from matplotlib import pyplot as plt
 
