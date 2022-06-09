@@ -28,3 +28,15 @@ def matFiles_to_npArray(path):
 def reshape(array):
     """current shape is (samples, width, height, depth), reshape to (samples, channels, depth, height, width)"""
     return np.moveaxis(array[:, np.newaxis], [2, 3, 4], [-1, 3, 2])
+
+
+def normalize():
+    """use some kind of max(max(x, y) to preserve the angle !!!"""
+    return None
+
+
+def extract_fields(dataset):
+    if 'dspl' in dataset[0]:
+        return np.array([item['dspl'] for item in dataset])
+    else:
+        return np.array([item['trac'] for item in dataset])
