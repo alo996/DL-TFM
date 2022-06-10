@@ -1,25 +1,14 @@
-from tracNet import TracNet
-from data_preparation import matFiles_to_npArray, reshape
+from data_preparation import reshape
+from data_vizualisation import plotCell
 
 import copy
-import datetime
-import gc
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-from typing import Tuple
-from scipy.io import loadmat, savemat
-from shapely.geometry import Point
-from sklearn.model_selection import train_test_split
-from torch.optim.lr_scheduler import StepLR
-from torch.utils.data import TensorDataset, DataLoader
-from torch.utils.tensorboard import SummaryWriter
-from torchinfo import summary
+from shapely.geometry import Point, Polygon
 
 
 def initialize_weights(module):
@@ -65,7 +54,7 @@ def run_epoch(model, loss_fn, dataloader, device, optimizer, train):
     return epoch_loss, epoch_rmse
 
 
-def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, max_epochs, patience):
+def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, max_epochs, writer, patience, NAME):
     best_val_rmse = np.inf
     best_epoch = -1
     best_model_weights = {}
@@ -97,3 +86,64 @@ def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, max_epochs, p
     torch.save(best_model_weights, f'/home/alexrichard/LRZ Sync+Share/ML in Physics/{NAME}.pth')
 
 
+def predictTrac(logits, model, E):
+    with torch.no_grad():
+        S = logits.size(dim=3)
+        mag = S / 104
+        conversion = E / (10 * mag)
+        return model(logits) * conversion
+
+
+def errorTrac(inp, target, model, E, plot=False):
+    '''
+    Calculate error of traction stress field realtive to ground truth as normalized MSE for cell interior only.
+    '''
+    model.eval()
+    brdx = np.array(inp['brdx'])  # x-values of predicted cell border
+    brdy = np.array(inp['brdy'])  # y-values of predicted cell border
+    trac_pred = predictTrac(torch.from_numpy(reshape(np.array(inp['dspl'])[np.newaxis, ])).double(), model, E)  # predict traction field for a single sample
+    trac_gt = torch.from_numpy(reshape(np.array(target['trac'])[np.newaxis, ])).double()
+
+    zipped = np.array(list(zip(brdx[0], brdy[0])))  # array with (x,y) pairs of cell border coordinates
+    polygon = Polygon(zipped)  # create polygon
+
+    interior = np.zeros((inp['dspl'].shape[0], inp['dspl'].shape[1]), dtype=int)  # create all zero matrix
+    for i in range(len(interior)):  # set all elements in interior matrix to 1 that actually lie within the cell
+        for j in range(len(interior[i])):
+            point = Point(i, j)
+            if polygon.contains(point):
+                interior[i][j] = 1
+    if plot:
+        p = gpd.GeoSeries(polygon)
+        p.plot()
+        plt.show()
+
+    # update prediction and ground truth by discarding areas outside of cell borders
+    trac_pred[-1, -1, 0, :, :] = trac_pred[-1, -1, 0, :, :] * torch.from_numpy(interior)
+    trac_pred[-1, -1, 1, :, :] = trac_pred[-1, -1, 1, :, :] * torch.from_numpy(interior)
+    trac_gt[-1, -1, 0, :, :] = trac_gt[-1, -1, 0, :, :] * torch.from_numpy(interior)
+    trac_gt[-1, -1, 1, :, :] = trac_gt[-1, -1, 1, :, :] * torch.from_numpy(interior)
+
+    # compute rmse
+    normalization = torch.count_nonzero(torch.from_numpy(interior) * torch.ones(size=interior.shape))
+    mse = torch.sum(((trac_pred[-1, -1, 0, :, :] - trac_gt[-1, -1, 0, :, :]) ** 2 + (
+                trac_pred[-1, -1, 1, :, :] - trac_gt[-1, -1, 1, :, :]) ** 2) / normalization)
+    rmse = torch.sqrt(mse)
+    msm = torch.sum((trac_pred[-1, -1, 0, :, :] ** 2 + trac_gt[-1, -1, 1, :, :] ** 2) / normalization)
+    rmsm = np.sqrt(msm)
+    error = rmse / rmsm
+
+    return error
+
+
+def test(inputs, targets, model, E):
+    total_error = 0
+    errors = {}
+    # Iterate over data
+    for i in range(len(inputs)):
+        error = errorTrac(inputs[i], targets[i], model, E, plot=True)
+        errors[inputs[i]['name']] = error
+        total_error += error
+
+    avg_error = total_error / len(inputs)
+    return avg_error, errors

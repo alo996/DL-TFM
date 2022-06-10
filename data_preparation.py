@@ -1,11 +1,6 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import os
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from scipy.io import loadmat, savemat
-from sklearn.model_selection import train_test_split
+from scipy.io import loadmat
 
 
 def matFiles_to_npArray(path):
