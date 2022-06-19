@@ -33,7 +33,7 @@ def run_epoch(model, loss_fn, dataloader, device, optimizer, train):
 
         # zero the parameters
         if train:
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
 
         # forward
         with torch.set_grad_enabled(train):
@@ -54,7 +54,7 @@ def run_epoch(model, loss_fn, dataloader, device, optimizer, train):
     return epoch_loss, epoch_rmse
 
 
-def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, max_epochs, writer, patience, NAME):
+def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, writer, NAME, max_epochs, patience):
     best_val_rmse = np.inf
     best_epoch = -1
     best_model_weights = {}
@@ -83,7 +83,7 @@ def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, max_epochs, w
         if epoch - best_epoch >= patience:
             break
 
-    torch.save(best_model_weights, f'/home/alexrichard/LRZ Sync+Share/ML in Physics/{NAME}.pth')
+    torch.save(best_model_weights, f'/home/alexrichard/LRZ Sync+Share/ML in Physics/Models/{NAME}_best val_rmse_is_{np.round(best_val_rmse, 3)}.pth')
 
 
 def predictTrac(logits, model, E):
@@ -119,13 +119,14 @@ def errorTrac(inp, target, model, E, plot=False):
         plt.show()
 
     # update prediction and ground truth by discarding areas outside of cell borders
-    trac_pred[-1, -1, 0, :, :] = trac_pred[-1, -1, 0, :, :] * torch.from_numpy(interior)
-    trac_pred[-1, -1, 1, :, :] = trac_pred[-1, -1, 1, :, :] * torch.from_numpy(interior)
-    trac_gt[-1, -1, 0, :, :] = trac_gt[-1, -1, 0, :, :] * torch.from_numpy(interior)
-    trac_gt[-1, -1, 1, :, :] = trac_gt[-1, -1, 1, :, :] * torch.from_numpy(interior)
+    interior = torch.from_numpy(interior)
+    trac_pred[-1, -1, 0, :, :] = trac_pred[-1, -1, 0, :, :] * interior
+    trac_pred[-1, -1, 1, :, :] = trac_pred[-1, -1, 1, :, :] * interior
+    trac_gt[-1, -1, 0, :, :] = trac_gt[-1, -1, 0, :, :] * interior
+    trac_gt[-1, -1, 1, :, :] = trac_gt[-1, -1, 1, :, :] * interior
 
     # compute rmse
-    normalization = torch.count_nonzero(torch.from_numpy(interior) * torch.ones(size=interior.shape))
+    normalization = torch.count_nonzero(interior * torch.ones(size=interior.shape))
     mse = torch.sum(((trac_pred[-1, -1, 0, :, :] - trac_gt[-1, -1, 0, :, :]) ** 2 + (
                 trac_pred[-1, -1, 1, :, :] - trac_gt[-1, -1, 1, :, :]) ** 2) / normalization)
     rmse = torch.sqrt(mse)
@@ -136,12 +137,12 @@ def errorTrac(inp, target, model, E, plot=False):
     return error
 
 
-def test(inputs, targets, model, E):
+def test(inputs, targets, model, E, plot=False):
     total_error = 0
     errors = {}
     # Iterate over data
     for i in range(len(inputs)):
-        error = errorTrac(inputs[i], targets[i], model, E, plot=True)
+        error = errorTrac(inputs[i], targets[i], model, E, plot)
         errors[inputs[i]['name']] = error
         total_error += error
 

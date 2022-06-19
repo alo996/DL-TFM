@@ -18,4 +18,5 @@ def plotCell(brdx, brdy, width, height):
 
     p = gpd.GeoSeries(polygon)
     p.plot()
-    plt.show()
+
+
