@@ -1,5 +1,5 @@
 from data_preparation import reshape
-from data_vizualisation import plotCell
+from data_visualization import plotCell
 
 import copy
 import geopandas as gpd
@@ -9,6 +9,8 @@ import torch
 import torch.nn as nn
 
 from shapely.geometry import Point, Polygon
+from tqdm import tqdm
+from time import sleep
 
 
 def initialize_weights(module):
@@ -17,7 +19,7 @@ def initialize_weights(module):
         torch.nn.init.normal_(module.weight, std=0.01)
 
 
-def run_epoch(model, loss_fn, dataloader, device, optimizer, train):
+def run_epoch(model, loss_fn, dataloader, device, epoch, optimizer, train):
     # Set model to training mode
     if train:
         model.train()
@@ -27,30 +29,35 @@ def run_epoch(model, loss_fn, dataloader, device, optimizer, train):
     epoch_loss = 0.0
     epoch_rmse = 0.0
 
-    # Iterate over data
-    for xb, yb in dataloader:
-        xb, yb = xb.to(device), yb.to(device)
+    with tqdm(dataloader, unit="batch") as tepoch:
+        # Iterate over data
+        for xb, yb in tepoch:
+            tepoch.set_description(f"Epoch {epoch}")
 
-        # zero the parameters
-        if train:
-            optimizer.zero_grad(set_to_none=True)
+            xb, yb = xb.to(device), yb.to(device)
 
-        # forward
-        with torch.set_grad_enabled(train):
-            pred = model(xb)
-            loss = loss_fn(pred, yb)
-
-            # backward + optimize if in training phase
+            # zero the parameters
             if train:
-                loss.backward()
-                nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                optimizer.step()
+                optimizer.zero_grad(set_to_none=True)
 
-        # statistics
-        epoch_loss += loss.item()
+            # forward
+            with torch.set_grad_enabled(train):
+                pred = model(xb)
+                loss = loss_fn(pred, yb)
 
-    epoch_loss /= len(dataloader.dataset)
-    epoch_rmse = np.sqrt(2 * epoch_loss)
+                # backward + optimize if in training phase
+                if train:
+                    loss.backward()
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                    optimizer.step()
+
+            # statistics
+            epoch_loss += loss.item()
+
+        epoch_loss /= len(dataloader.dataset)
+        epoch_rmse = np.sqrt(2 * epoch_loss)
+        tepoch.set_postfix(loss=epoch_loss)
+        sleep(0.01)
     return epoch_loss, epoch_rmse
 
 
@@ -60,9 +67,9 @@ def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, writer, NAME,
     best_model_weights = {}
 
     for epoch in range(1, max_epochs + 1):
-        train_loss, train_rmse = run_epoch(model, loss_fn, dataloaders['train'], device, optimizer, train=True)
+        train_loss, train_rmse = run_epoch(model, loss_fn, dataloaders['train'], device, epoch, optimizer, train=True)
         scheduler.step()
-        val_loss, val_rmse = run_epoch(model, loss_fn, dataloaders['val'], device, optimizer=None, train=False)
+        val_loss, val_rmse = run_epoch(model, loss_fn, dataloaders['val'], device, epoch, optimizer=None, train=False)
         print(
             f"Epoch {epoch}/{max_epochs}, train_loss: {train_loss:.3f}, train_rmse: {train_rmse:.3f}, val_loss: {val_loss:.3f}, val_rmse: {val_rmse:.3f}")
 
@@ -85,10 +92,9 @@ def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, writer, NAME,
 
     torch.save(best_model_weights, f'/home/alexrichard/LRZ Sync+Share/ML in Physics/Models/{NAME}_best val_rmse_is_{np.round(best_val_rmse, 3)}.pth')
 
-
 def predictTrac(logits, model, E):
     with torch.no_grad():
-        S = logits.size(dim=3)
+        S = logits.shape[3]
         mag = S / 104
         conversion = E / (10 * mag)
         return model(logits) * conversion

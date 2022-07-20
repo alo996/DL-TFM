@@ -5,8 +5,10 @@ import numpy as np
 from shapely.geometry import Point, Polygon
 
 
-def plotCell(brdx, brdy, width, height):
-    zipped = np.array(list(zip(brdx, brdy)))  # array with (x,y) pairs of cell border coordinates
+def plotCell(dspl_dict):
+    width = dspl_dict['dspl'].shape[0]
+    height = width
+    zipped = np.array(list(zip(dspl_dict['brdx'][0], dspl_dict['brdy'][0])))  # array with (x,y) pairs of cell border coordinates
     polygon = Polygon(zipped)  # create polygon
 
     interior = np.zeros(shape=(width, height), dtype=int)  # create all zero matrix
@@ -18,5 +20,4 @@ def plotCell(brdx, brdy, width, height):
 
     p = gpd.GeoSeries(polygon)
     p.plot()
-
 
