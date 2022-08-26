@@ -1,6 +1,6 @@
 # DL-TFM
 
-This project is part of my undergraduate research conducted at the LMU-based ['Cell Biophysics and Statistical Physics'](https://www.biostatphys.vetmed.uni-muenchen.de/index.html) group led by Prof. Dr. Sabaß. I implemented a neural network to predict traction forces exerted by various cell types, given a displacement field that was aquired via Traction Force Microscopy (TFM). The implementation is largely based on the paper ['Traction force microscopy by deep learning'](https://www.sciencedirect.com/science/article/pii/S0006349521004987) by Yu-li Wang and Yun-Chu Lin.
+This project is part of my undergraduate research conducted at the LMU-based ['Cell Biophysics and Statistical Physics'](https://www.biostatphys.vetmed.uni-muenchen.de/index.html) group led by Prof. Dr. Sabaß. I implemented a neural network to predict traction forces exerted by various cell types, given the associated displacement field that was aquired via Traction Force Microscopy (TFM). The implementation is largely based on the paper ['Traction force microscopy by deep learning'](https://www.sciencedirect.com/science/article/pii/S0006349521004987) by Yu-li Wang and Yun-Chu Lin.
 
 ## Coming up
 
