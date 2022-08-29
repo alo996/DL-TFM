@@ -33,11 +33,13 @@ class ConvBlock_2(nn.Module):
 
 
 class TracNet(nn.Module):
-    """Define the actual neural network as class `TracNet`.
+    """
+    Define the actual neural network as class `TracNet`.
     It makes use of the above defined `ConvBlock_1` and `ConvBlock_2` as well as
         - Transposed 3D-Convolution
         - 3D-MaxPooling
-        - Concatenating layers"""
+        - Concatenating layers
+    """
     def __init__(self, n_channels):
         super(TracNet, self).__init__()
 

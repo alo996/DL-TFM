@@ -1,5 +1,4 @@
 from data_preparation import reshape
-from data_visualization import plotCell
 
 import copy
 import geopandas as gpd
@@ -27,7 +26,6 @@ def run_epoch(model, loss_fn, dataloader, device, epoch, optimizer, train):
         model.eval()
 
     epoch_loss = 0.0
-    epoch_rmse = 0.0
 
     with tqdm(dataloader, unit="batch") as tepoch:
         # Iterate over data
@@ -92,6 +90,7 @@ def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, writer, NAME,
 
     torch.save(best_model_weights, f'/home/alexrichard/LRZ Sync+Share/ML in Physics/Models/{NAME}_best val_rmse_is_{np.round(best_val_rmse, 3)}.pth')
 
+
 def predictTrac(logits, model, E):
     with torch.no_grad():
         S = logits.shape[3]
@@ -101,9 +100,7 @@ def predictTrac(logits, model, E):
 
 
 def errorTrac(inp, target, model, E, plot=False):
-    '''
-    Calculate error of traction stress field realtive to ground truth as normalized MSE for cell interior only.
-    '''
+    # Calculate error of traction stress field realtive to ground truth as normalized MSE for cell interior only.
     model.eval()
     brdx = np.array(inp['brdx'])  # x-values of predicted cell border
     brdy = np.array(inp['brdy'])  # y-values of predicted cell border
