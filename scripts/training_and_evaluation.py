@@ -151,3 +151,4 @@ def test(inputs, targets, model, E, plot=False):
 
     avg_error = total_error / len(inputs)
     return avg_error, errors
+
