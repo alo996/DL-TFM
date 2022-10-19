@@ -88,7 +88,7 @@ def fit(model, loss_fn, scheduler, dataloaders, optimizer, device, writer, NAME,
         if epoch - best_epoch >= patience:
             break
 
-    torch.save(best_model_weights, f'/home/alexrichard/LRZ Sync+Share/ML in Physics/Models/{NAME}_best val_rmse_is_{np.round(best_val_rmse, 3)}.pth')
+    torch.save(best_model_weights, f'{NAME}_best_val_rmse_{np.round(best_val_rmse, 3)}.pth')
 
 
 def predictTrac(logits, model, E):
@@ -141,14 +141,11 @@ def errorTrac(inp, target, model, E, plot=False):
 
 
 def test(inputs, targets, model, E, plot=False):
-    total_error = 0
-    errors = {}
+    losses = {}
     # Iterate over data
     for i in range(len(inputs)):
-        error = errorTrac(inputs[i], targets[i], model, E, plot)
-        errors[inputs[i]['name']] = error
-        total_error += error
+        loss = errorTrac(inputs[i], targets[i], model, E, plot)
+        losses[inputs[i]['name']] = loss
 
-    avg_error = total_error / len(inputs)
-    return avg_error, errors
+    return losses
 

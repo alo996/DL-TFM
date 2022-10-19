@@ -1,5 +1,4 @@
 import geopandas as gpd
-import matplotlib as plt
 import numpy as np
 
 from shapely.geometry import Point, Polygon
