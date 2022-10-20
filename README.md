@@ -12,10 +12,3 @@ Wang, Y. L. & Lin, Y. C. (2021, August).
 Traction force microscopy by deep learning.
 Biophysical Journal, 120(15), 3079–3090.
 https://doi.org/10.1016/j.bpj.2021.06.011
-
-## References
-<a id="1">[1]</a> 
-Wang, Y. L. & Lin, Y. C. (2021, August). 
-Traction force microscopy by deep learning.
-Biophysical Journal, 120(15), 3079–3090.
-https://doi.org/10.1016/j.bpj.2021.06.011
